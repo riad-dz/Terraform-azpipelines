@@ -1,0 +1,62 @@
+trigger: none
+
+pool:
+    vmImage: 'ubuntu-latest'
+
+jobs:
+- job: Azure_Infra_Creation
+  steps:
+
+  - task: qetza.replacetokens.replacetokens-task.replacetokens@5
+    displayName: 'Replace variables by values in terraform files'
+    inputs:
+      rootDirectory: 'Terraform/resource-group/'
+      targetFiles: '**.tf'
+      encoding: 'auto'
+      tokenPattern: 'default'
+      writeBOM: true
+      actionOnMissing: 'warn'
+      keepToken: false
+      actionOnNoFiles: 'continue'
+      enableTransforms: false
+      enableRecursion: false
+      useLegacyPattern: false
+      enableTelemetry: true
+  
+    
+  - task: TerraformInstaller@0
+    displayName: 'Install latest Terraform on Ubuntu image'
+    inputs:
+      terraformVersion: 'latest'
+  
+  - task: TerraformTaskV3@3
+    displayName: 'Terraform init'
+    inputs:
+      provider: 'azurerm'
+      command: 'init'
+      workingDirectory: $(tf-files-path)
+      backendServiceArm: 'Azure_SP'
+      backendAzureRmResourceGroupName: $(tf-var-rg-backend)
+      backendAzureRmStorageAccountName: $(tf-var-storage-backend)
+      backendAzureRmContainerName: $(tf-var-container-tfstate)
+      backendAzureRmKey: $(tf-var-key-tfstate)
+  
+  - task: TerraformTaskV3@3
+    displayName: 'Terraform plan'
+    inputs:
+      provider: 'azurerm'
+      command: 'plan'
+      workingDirectory: $(tf-files-path)
+      environmentServiceNameAzureRM: 'Azure_SP'
+
+  - task: TerraformTaskV3@3
+    displayName: 'Terraform apply'
+    inputs:
+      provider: 'azurerm'
+      command: 'apply'
+      workingDirectory: '$(tf-files-path)'
+      environmentServiceNameAzureRM: 'Azure_SP'
+     
+  
+  
+
