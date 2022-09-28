@@ -10,7 +10,7 @@ jobs:
   - task: qetza.replacetokens.replacetokens-task.replacetokens@5
     displayName: 'Replace variables by values in terraform files'
     inputs:
-      rootDirectory: 'Terraform/resource-group/'
+      rootDirectory: 'Terraform/'
       targetFiles: '**.tf'
       encoding: 'auto'
       tokenPattern: 'default'
